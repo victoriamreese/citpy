@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class Segment:
     def __init__(self, x1, y1, x2, y2):
@@ -6,6 +7,20 @@ class Segment:
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
+        self.minx=0 #screen dimensions
+        self.maxx=720 #screen dimensions
+        self.miny=0 #screen dimensions
+        self.maxy=534 #screen dimensions
+        self.tolerance=5 #allowed distance from the edge; should be small
+        
+    def point_on_screen(self):
+        if ((self.minx-self.tolerance <= self.x1 <= self.maxx+self.tolerance) and \
+             (self.minx-self.tolerance <= self.x2 <= self.maxx+self.tolerance) and \
+             (self.miny-self.tolerance <= self.y1 <= self.maxy+self.tolerance) and \
+             (self.miny-self.tolerance <= self.y2 <= self.maxy+self.tolerance)):
+             return True
+        else:
+             return False
 
     def find_line_equation(self):
         A = self.y1 - self.y2
@@ -17,6 +32,8 @@ class Segment:
 
 class CheckLeaf:
     def __init__(self, segA, segB):
+        self.segA = segA
+        self.segB = segB
         self.segclassA = Segment(segA[0],segA[1],segA[2],segA[3])
         self.segclassB = Segment(segB[0],segB[1],segB[2],segB[3])
         self.coefficients_a = self.segclassA.find_line_equation()
@@ -29,6 +46,12 @@ class CheckLeaf:
         self.y1_b = segB[1]
         self.x2_b = segB[2]
         self.y2_b = segB[3]
+        
+    def on_screen(self):
+        if self.segclassA.point_on_screen() and self.segclassB.point_on_screen():
+            return True
+        else:
+            return False
 
     def find_the_intersection_point(self):
         coefficient_matrix = np.matrix([[self.coefficients_a[0], self.coefficients_a[1]], [self.coefficients_b[0], self.coefficients_b[1]]])
@@ -43,13 +66,11 @@ class CheckLeaf:
             # in this case, the lines are essentially parallel, so they will not intersect on screen, if at all.  I've put in a fake point which will fail a later llogic check.
             return ([-1000000, -1000000])
 
-    #This uses the previous two functions to give back a specific answer as to whether the two
     def line_segments_intersect(self):
         det = np.linalg.det(np.matrix([[self.coefficients_a[0], self.coefficients_a[1]], [self.coefficients_b[0], self.coefficients_b[1]]]))
         if (det ** 2 > 0.0001):
             intersection_point = self.find_the_intersection_point()
-            print(intersection_point)  # reference the earlier function
-            # Now find the boundaries of the line segments.
+            # find boundaries of the line segments.
             min_ax = int(min(self.x1_a, self.x2_a));
             max_ax = int(max(self.x1_a, self.x2_a))
             min_ay = int(min(self.y1_a, self.y2_a));
@@ -71,37 +92,28 @@ class CheckLeaf:
                 return False
         else:
             return False # a determinent of zero means the line segments are parallel.
-
-
-class Leaf:
-    def __init__(self, x1_a, y1_a, x2_a, y2_a, x1_b, y1_b, x2_b, y2_b):
-        self.x1_a = x1_a
-        self.y1_a = y1_a
-        self.x2_a = x2_a
-        self.y2_a = y2_a
-        self.x1_b = x1_b
-        self.y1_b = y1_b
-        self.x2_b = x2_b
-        self.y2_b = y2_b
-        self.axis1 = [(x1_a, y1_a), (x2_a, y2_a)]
-        self.axis2 = [(x1_b, y1_b), (x2_b, y2_b)]
-        self.slope1 = abs(y1_a - y2_a) / abs(x1_a - x2_a) if abs(x1_a - x2_a) != 0 else 0.0
-        self.slope2 = abs(y1_b - y2_b) / abs(x1_b - x2_b) if abs(x1_b - x2_b) != 0 else 0.0
+        
+    def calc_slopes(self):
+        slope1 = abs(self.y1_a - self.y2_a) / abs(self.x1_a - self.x2_a) if abs(self.x1_a - self.x2_a) != 0 else 0.0
+        slope2 = abs(self.y1_b - self.y2_b) / abs(self.x1_b - self.x2_b) if abs(self.x1_b - self.x2_b) != 0 else 0.0
+        return slope1, slope2
 
     def calc_angle_between_segments(self):
-        numerator = (self.slope2 - self.slope1)
-        denominator = (1 + self.slope2 * self.slope1)
-        if denominator == 0:
-            return 90.0
-        else:
-            return ((math.atan(numerator / denominator) * 180 / math.pi))
+            slope1, slope2 = self.calc_slopes()
+            numerator = (slope2 - slope1)
+            denominator = (1 + slope2 * slope1)
+            if denominator == 0:
+                return 90.0
+            else:
+                return ((math.atan(numerator / denominator) * 180 / math.pi))
 
-    def calc_lengths_major_minor(self):
+    def calc_lengths_minor_major(self):
         """
-        returns length of axes in order of size,
-        [minor axis, major axis]
+        returns: 0 - major axis length, 1 - major axis coordinates, 2 - minor axis length, 3 - minor axis coordinates
         """
-        import math
         length_axis1 = math.sqrt(abs(self.y1_a - self.y2_a) ** 2 + abs(self.x1_a - self.x2_a) ** 2)
         length_axis2 = math.sqrt(abs(self.y1_b - self.y2_b) ** 2 + abs(self.x1_b - self.x2_b) ** 2)
-        return sorted([length_axis1, length_axis2])
+        if length_axis1 > length_axis2:
+            return length_axis1, self.segA, length_axis2, self.segB
+        else:
+            return length_axis2, self.segB, length_axis1, self.segA
