@@ -3,9 +3,8 @@ import json
 from pandas.io.json import json_normalize
 import matplotlib.pyplot as plt
 import itertools
+from plant_and_segment_classes import *
 
-
-data = pd.read_csv('classifications.csv')
 
 
 def vals_to_new_column(data_column):
@@ -18,7 +17,6 @@ def vals_to_new_column(data_column):
         list_vals.append([entry['x1'], entry['y1'], entry['x2'], entry['y2']])
     return list_vals
 
-data['listed_vals'] = data['annotations'].apply(vals_to_new_column)
 
 
 
@@ -33,14 +31,16 @@ def make_plant_datasheet(data_table):
             segments_to_check = CheckLeaf(combo[0],combo[1])
             if segments_to_check.on_screen() and segments_to_check.line_segments_intersect() and segments_to_check.calc_angle_between_segments() > 80.0:
                 lengths_minor_major = segments_to_check.calc_lengths_minor_major()
+                intersection_x = segments_to_check.find_the_intersection_point()[0]
+                intersection_y = segments_to_check.find_the_intersection_point()[1]
                 df = df.append([[data_table.classification_id[row_num], \
                                  data_table.user_name[row_num], \
                                  data_table.created_at[row_num], \
                                  data_table.subject_data[row_num], \
                                  data_table.subject_ids[row_num], \
                                  segments_to_check.calc_angle_between_segments(), \
-                                 float(str(segments_to_check.find_the_intersection_point()[0])[2:-2]), \
-                                 float(str(segments_to_check.find_the_intersection_point()[1])[2:-2]), \
+                                 intersection_x, \
+                                 intersection_y, \
                                  lengths_minor_major[0], \
                                  lengths_minor_major[1][0], \
                                  lengths_minor_major[1][1], \
@@ -73,3 +73,10 @@ def make_plant_datasheet(data_table):
                    axis = 'columns')
     #figure out how to rename index
     return df
+
+
+
+data = pd.read_csv('classifications.csv')
+data['listed_vals'] = data['annotations'].apply(vals_to_new_column)
+newsheet = make_plant_datasheet(data[:20])
+print(newsheet)
