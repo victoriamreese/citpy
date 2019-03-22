@@ -4,7 +4,7 @@ from pandas.io.json import json_normalize
 import matplotlib.pyplot as plt
 import itertools
 from plant_and_segment_classes import *
-
+import argparse
 
 
 def vals_to_new_column(data_column):
@@ -70,13 +70,23 @@ def make_plant_datasheet(data_table):
                     15: 'minor_y1', \
                     16: 'minor_x2', \
                     17: 'minor_y2',},\
-                   axis = 'columns')
+                   axis = 'columns', index_col=0)
     #figure out how to rename index
+    #df.drop(df.columns[df.columns.str.contains('unnamed',case = False)],axis = 1)
     return df
 
 
+def clean_data(file_name): 
+    print('importing ', file_name)
+    data  = pd.read_csv(file_name)
+    data['listed_vals'] = data['annotations'].apply(vals_to_new_column)
+    newsheet = make_plant_datasheet(data)
+    newsheet.to_csv(r'cleaned_classifications.csv')
+    return 'complete'
+    
+if __name__== '__main__':
+    parser = argparse.ArgumentParser('data to be imported')
+    parser.add_argument('-f', '--file', default= 'classifications.csv', help='Process some microplant data')
+    args = parser.parse_args()
+    clean_data(args.file)
 
-data = pd.read_csv('classifications.csv')
-data['listed_vals'] = data['annotations'].apply(vals_to_new_column)
-newsheet = make_plant_datasheet(data[:20])
-print(newsheet)
