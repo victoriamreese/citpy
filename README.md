@@ -13,6 +13,8 @@ This file contains classes with methods to:
 ### cleaning_script.py:
 This file takes an uncleaned .csv file as input returns a cleaned dataframe with the desired structure.
 
+run the script: ` python3 cleaning_script.py -f file_name`
+
 ### visualizations.py:
 This file uses a cleaned dataframe to produce desired visualizations of classification data. 
 
