@@ -26,7 +26,7 @@ class Segment:
         A = self.y1 - self.y2
         B = self.x2 - self.x1 
         C = A * self.x1 + B * self.y1 
-        return_list: List[Any] = [A, B, C]
+        return_list = [A, B, C]
         return return_list
     
 
@@ -61,8 +61,8 @@ class CheckLeaf:
             # in this case, the segments intersect somewhere
             inverse_coefficient_matrix = coefficient_matrix.I
             solution = inverse_coefficient_matrix.dot(RHS_matrix)
-            float(str(solution)[2:-2])
-            return solution
+            newsolution = [float(str(solution[0])[2:-2]),float(str(solution[1])[2:-2])]
+            return newsolution
         else:
             # in this case, the lines are essentially parallel, so they will not intersect on screen, if at all.  I've put in a fake point which will fail a later llogic check.
             return ([-1000000, -1000000])
@@ -118,3 +118,4 @@ class CheckLeaf:
             return length_axis1, self.segA, length_axis2, self.segB
         else:
             return length_axis2, self.segB, length_axis1, self.segA
+
