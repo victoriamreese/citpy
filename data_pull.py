@@ -3,7 +3,7 @@ from panoptes_client import Panoptes, Project, SubjectSet, Classification
 #this script will pull data from zooniverse project
 
 #authentication:
-owner = Panoptes.connect(username='reesevic000', password='Scoop123!')
+owner = Panoptes.connect(username='fakeuser', password='fakepwd')
 
 with owner:
     all_proj_classifications = Classification.where(scope='project', project_id=3866)
